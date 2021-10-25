@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="js/pixi.min.js"></script>
+    <script>
+		var app = new PIXI.Application(1400,600);
+		document.body.appendChild(app.view);
+		app.ticker.add(animate);
+		
+		const music1 = new Audio("res/ZombiesOnYourLawn.ogg");
+		music1.play();
+		
+		var bg = new PIXI.Sprite.fromImage("res/background1.png");
+		app.stage.addChild(bg);
+		bg.on("click",addPlanet);
+		bg.interactive = true;
+		var planet0 = new PIXI.Sprite.fromImage("res/planet.png");
+		app.stage.addChild(planet0);
+		planet0.x = 150;
+		planet0.y = 400;
+		planet0.anchor.x = 0.3;
+		planet0.anchor.y = 0.3;
+		planet0.scale.x = 0.6;
+		planet0.scale.y = 0.6;
+		planet0.on("click",change);
+		planet0.interactive = true;
+		
+		var sun = 100;
+		var sunshine = new PIXI.Text("阳光 ：");
+		app.stage.addChild(sunshine);
+		sunshine.x = 250;
+		sunshine.y = 50;
+		
+		var over1 = new PIXI.Text();
+		app.stage.addChild(over1);
+		over1.x = 600;
+		over1.y = 300;
+		
+		var speed = [];
+		var zombies = [];
+		var planets = [];
+		var zombieblood = [];
+		var bullets = [];
+		var btime = [];
+		var time = 0;
+		var flag = 0;
+		var number = 0;
+		
+	
+		
+		function change(){
+			if(flag === 0){
+				flag = 1;
+			}
+		}
+		function addZombie(){
+			var zombie = new PIXI.Sprite.fromImage("res/zombie.png");
+			app.stage.addChild(zombie);
+			zombie.anchor.y = 0.5;
+			zombie.scale.x = -1;
+			zombie.x = 1000;
+			zombie.y = Math.round((Math.random()*500+50)/100)*100;
+			zombies.push(zombie);
+			speed.push(0.2);
+			zombieblood.push(100);
+		}
+		function addPlanet(event){
+			var pos = event.data.getLocalPosition(app.stage);	
+			if(flag === 1&&sun>=100){
+				if(pos.x>200&&pos.x<1000&&pos.y<550&&pos.y>50){
+				var planet = new PIXI.Sprite.fromImage("res/planet.png");
+				planet.x = Math.round((pos.x-200)/90)*90+200;
+				planet.y = Math.round(pos.y/100)*100;
+				planet.anchor.set(0.5,0.2);
+				planet.scale.x = 0.4;
+				planet.scale.y = 0.4;
+				app.stage.addChild(planet);
+				planets.push(planet);
+				btime.push(0);
+				sun-=100;
+				}
+			}
+			flag = 0;
+		}
+		function animate(){
+			sunshine.text = "阳光："+sun;
+			if(time === 1200){
+				addZombie();
+				time = 0;
+				number++;
+			}
+			if(time === 500||time === 1000){
+				sun+=40;
+				}
+            if(zombies.length>0){
+				for(var i = 0;i<zombies.length;i++){
+					zombies[i].x = zombies[i].x-speed[i];
+					if(zombies[i].x<200){
+						over1.text = "你的脑子被吃掉了！！！";
+						music1.pause();
+						}
+				}
+			}
+			if(bullets.length>0){
+				for(i = 0;i<bullets.length;i++){
+					bullets[i].x += 1;
+					if(bullets[i].x>1400){
+						app.stage.removeChild(bullets[i]);
+						bullets.splice(i,1);
+					}
+				}
+			}
+			if(planets.length>0){
+				for(i = 0;i<planets.length;i++){
+					btime[i]++;
+				}
+			}
+			if(zombies.length>0&&bullets.length>0){
+				for(i = 0;i<zombies.length;i++){
+					for(var j = bullets.length-1;j>=0;j--){
+						    if(bullets[j].x>zombies[i].x-50){
+								if(bullets[j].x<zombies[i].x&&zombies[i].y === bullets[j].y){
+									zombieblood[i]-=10;
+									app.stage.removeChild(bullets[j]);
+									bullets.splice(j,1);
+							}
+						}
+					}
+					if(bullets.length === 0)
+					    break;
+				}
+			}
+			if(zombies.length>0){
+				for(i = zombies.length-1;i>=0;i--){
+					if(zombieblood[i] === 0){
+						app.stage.removeChild(zombies[i]);
+						zombieblood.splice(i,1);
+						zombies.splice(i,1);
+					}
+				}
+			}
+			if(planets.length>0){
+				for(i = 0;i<planets.length;i++){
+					if(btime[i]===200){
+					    btime[i] = 0;
+						var bullet = new PIXI.Sprite.fromImage("res/bullet.png");
+						app.stage.addChild(bullet);
+						bullet.anchor.set(0.5,0.5);
+						bullet.scale.x = 0.5;
+						bullet.scale.y = 0.5;
+						bullet.x = planets[i].x+30;
+						bullet.y = planets[i].y;
+						bullets.push(bullet);
+						}
+				}
+			}
+			if(number<=10){
+				time++;
+			}
+			else
+			    time+=2;
+			if(number===30){
+				over1.text = "恭喜你获得胜利！！";
+				music1.pause();
+			}
+		}
+    </script>
+</body>
+</html>
